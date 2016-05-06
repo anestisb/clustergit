@@ -203,6 +203,13 @@ def read_arguments(args):
                 help        = "Recursively search for git repos"
                 )
 
+    parser.add_argument("--exclude-submodules",
+                action      = "store_true",
+                dest        = "exclude_submodules",
+                default     = False,
+                help        = "Exclude git repo submodules"
+                )
+
     parser.add_argument("-e", "--exclude",
                 action      = "append",
                 dest        = "exclude",
@@ -268,6 +275,11 @@ def check(dirname, options):
 
         # is there a .git file
         if os.path.exists(os.path.join(infile, ".git")):
+            status, gitdir = run('cd %s && git rev-parse --git-dir' % infile, options)
+            if options.exclude_submodules and (gitdir != ".git"):
+                if options.verbose:
+                    print("skipping %s submodule repo" % infile)
+                continue
             cmdprefix = 'cd "%s" &&' % infile
             if os.name != 'nt':
                 cmdprefix = cmdprefix + ' LC_ALL=C'
