@@ -49,10 +49,10 @@ class Colors:
     WARNING = '\033[93m'   # operation succeeded with non-default result
     FAIL = '\033[91m'      # operation did not succeed
     ENDC = '\033[0m'       # reset color
-    
+
     # list of all colors
     ALL = [BOLD, UNDERLINE, HEADER, OKBLUE, OKGREEN, WARNING, FAIL, ENDC]
-    
+
     # map from ASCII to Windows color text attribute
     WIN_DICT = {
         BOLD: 15,
