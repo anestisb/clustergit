@@ -221,6 +221,13 @@ def read_arguments(args):
                   help      = "Skip symbolic links when searching for git repos"
                   )
 
+    parser.add_argument("--skip-nested-git",
+                  action    = "store_true",
+                  dest      = "skipNestedGit",
+                  default   = False,
+                  help      = "Skip git repos inside git repos"
+                  )
+
     parser.add_argument("-e", "--exclude",
                 action      = "append",
                 dest        = "exclude",
@@ -262,6 +269,14 @@ def is_excluded(path, options):
             return True
     return False
 
+def is_parent_gitted(path, basedir):
+    searchPath = os.path.realpath(os.path.join(path, "../"))
+    stopDir = os.path.realpath(basedir)
+    while searchPath != stopDir:
+        if os.path.exists(os.path.join(searchPath, ".git")):
+            return True
+        searchPath = os.path.realpath(os.path.join(searchPath, "../"))
+    return False
 
 def run(command, options):
     if options.verbose:
@@ -291,11 +306,17 @@ def check(dirname, options):
                     print("skipping %s symbolic link" % infile)
                 continue
 
+            if options.skipNestedGit and is_parent_gitted(infile, options.dirname):
+                if options.verbose:
+                    print("skipping %s netsted git" % infile)
+                continue
+
             status, gitdir = run('cd %s && git rev-parse --git-dir' % infile, options)
             if options.exclude_submodules and (gitdir != ".git"):
                 if options.verbose:
                     print("skipping %s submodule repo" % infile)
                 continue
+
             cmdprefix = 'cd "%s" &&' % infile
             if os.name != 'nt':
                 cmdprefix = cmdprefix + ' LC_ALL=C'
@@ -315,6 +336,7 @@ def check(dirname, options):
 
             if options.relative:
                 infile = os.path.relpath(infile, options.dirname)
+
             messages = []
             clean = True
             can_push = False
